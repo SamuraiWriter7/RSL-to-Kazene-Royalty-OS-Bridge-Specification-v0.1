@@ -1,0 +1,29 @@
+{
+  "settlement_id": "settle_01HZXC9M0N1P2Q3R4S5T6U7V",
+  "settlement_group_id": "group_2026-04-19_req_01",
+  "asset_id": "/articles/dragon-philosophy",
+  "settlement_status": "ready",
+  "q_usage": {
+    "base_unit": 1,
+    "action_coef": 1.8,
+    "work_coef": 1,
+    "scope_coef": 1,
+    "contribution_share": 0.42,
+    "q_amount": 0.756
+  },
+  "monetary_allocation": {
+    "source_mode": "rsl_external_fee",
+    "allocable_amount": 0.016,
+    "currency": "USD",
+    "formula": "allocable_amount * (asset_q_amount / settlement_group_total_q_amount)",
+    "allocated_amount": 0.0064
+  },
+  "provenance": {
+    "access_snapshot_id": "snap_01HZXA7K8M9N0P1Q2R3S4T5U",
+    "trace_event_id": "trace_01HZXB8L9M0N1P2Q3R4S5T6U",
+    "external_charge_event_id": "charge_01HZXD0N1P2Q3R4S5T6U7V8W",
+    "policy_hash": "sha256:abc123def4567890",
+    "rsl_document_url": "https://example.com/rsl.xml",
+    "license_server_url": "https://license.example.com"
+  }
+}
