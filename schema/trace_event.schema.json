@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schema/trace_event.schema.json",
+  "title": "Trace Event Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trace_event_id",
+    "occurred_at",
+    "ai_system_id",
+    "principal_id",
+    "asset_id",
+    "permission_snapshot_id",
+    "action",
+    "scope",
+    "contribution_share",
+    "evidence"
+  ],
+  "properties": {
+    "trace_event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ai_system_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "principal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operator_entity_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "asset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "permission_snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "raw_source_action"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "view",
+            "search_index",
+            "ai_index",
+            "grounding",
+            "summarize",
+            "quote",
+            "external_response",
+            "train",
+            "other"
+          ]
+        },
+        "raw_source_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_tokens",
+        "output_tokens",
+        "bytes_read",
+        "passages_retrieved",
+        "duration_ms"
+      ],
+      "properties": {
+        "input_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "bytes_read": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "passages_retrieved": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "duration_ms": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "contribution_share": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "session_id",
+        "retrieval_id",
+        "model_run_id"
+      ],
+      "properties": {
+        "request_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "session_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "retrieval_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_run_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
