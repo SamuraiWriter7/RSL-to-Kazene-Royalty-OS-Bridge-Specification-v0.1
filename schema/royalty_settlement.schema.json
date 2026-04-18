@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schema/royalty_settlement.schema.json",
+  "title": "Royalty Settlement Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "settlement_id",
+    "settlement_group_id",
+    "asset_id",
+    "settlement_status",
+    "q_usage",
+    "monetary_allocation",
+    "provenance"
+  ],
+  "properties": {
+    "settlement_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "settlement_group_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "settlement_status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "pending",
+        "blocked_or_pending",
+        "free_mode"
+      ]
+    },
+    "q_usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_unit",
+        "action_coef",
+        "work_coef",
+        "scope_coef",
+        "contribution_share",
+        "q_amount"
+      ],
+      "properties": {
+        "base_unit": {
+          "type": "number",
+          "minimum": 0
+        },
+        "action_coef": {
+          "type": "number",
+          "minimum": 0
+        },
+        "work_coef": {
+          "type": "number",
+          "minimum": 0
+        },
+        "scope_coef": {
+          "type": "number",
+          "minimum": 0
+        },
+        "contribution_share": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "q_amount": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "monetary_allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_mode",
+        "allocable_amount",
+        "currency",
+        "formula",
+        "allocated_amount"
+      ],
+      "properties": {
+        "source_mode": {
+          "type": "string",
+          "enum": [
+            "rsl_external_fee",
+            "platform_pool",
+            "none"
+          ]
+        },
+        "allocable_amount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "formula": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allocated_amount": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "access_snapshot_id",
+        "trace_event_id",
+        "external_charge_event_id",
+        "policy_hash",
+        "rsl_document_url",
+        "license_server_url"
+      ],
+      "properties": {
+        "access_snapshot_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trace_event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "external_charge_event_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policy_hash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rsl_document_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "license_server_url": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "format": "uri"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
