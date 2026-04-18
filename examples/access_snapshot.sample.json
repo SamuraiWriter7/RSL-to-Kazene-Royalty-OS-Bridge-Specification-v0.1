@@ -1,0 +1,74 @@
+{
+  "snapshot_id": "snap_01HZXA7K8M9N0P1Q2R3S4T5U",
+  "asset_id": "/articles/dragon-philosophy",
+  "policy_id": "/articles/dragon-philosophy#license-1",
+  "source": {
+    "rsl_document_url": "https://example.com/rsl.xml",
+    "discovery_method": "robots_txt_license",
+    "rsl_namespace": "https://rslstandard.org/rsl",
+    "content_url": "/articles/dragon-philosophy",
+    "license_server_url": "https://license.example.com"
+  },
+  "canonical": {
+    "permits": {
+      "usage": [
+        "ai-input",
+        "ai-index"
+      ],
+      "user": [
+        "commercial"
+      ],
+      "geo": []
+    },
+    "prohibits": {
+      "usage": [
+        "ai-train"
+      ],
+      "user": [],
+      "geo": []
+    },
+    "payment": {
+      "type": "use",
+      "standard_url": "https://example.com/licenses/pay-per-use",
+      "custom_url": null,
+      "amount": {
+        "value": 0.02,
+        "currency": "USD"
+      },
+      "accepts": {
+        "media_type": null,
+        "payload": null
+      }
+    }
+  },
+  "normalized": {
+    "ai_training": "prohibit",
+    "ai_input": "allow",
+    "ai_index": "allow",
+    "search_indexing": "unknown",
+    "commercial_use": "allow",
+    "non_commercial_use": "unknown",
+    "education_use": "unknown",
+    "government_use": "unknown",
+    "personal_use": "unknown"
+  },
+  "derived_access": {
+    "external_response": "inferred_allow",
+    "retraining_prohibited": true,
+    "quote": "unknown",
+    "summarize": "unknown",
+    "embed": "unknown",
+    "reference_only": false
+  },
+  "billing": {
+    "external_billing_mode": "per_inference_like_use",
+    "charge_trigger": "ai_generated_output_or_grounding_use",
+    "billing_required": true,
+    "license_acquisition_required": true
+  },
+  "extensions": {
+    "rsl_unmapped": {}
+  },
+  "policy_hash": "sha256:abc123def4567890",
+  "created_at": "2026-04-19T10:00:00Z"
+}
