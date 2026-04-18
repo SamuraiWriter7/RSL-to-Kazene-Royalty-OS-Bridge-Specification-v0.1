@@ -1,0 +1,661 @@
+{
+  "spec": {
+    "id": "rsl-royalty-bridge-v0.1",
+    "title": "RSL to Kazene Royalty OS Bridge Specification",
+    "status": "proposed",
+    "language": "ja",
+    "version": "0.1.0",
+    "last_updated": "2026-04-19",
+    "purpose": [
+      "RSLの機械可読ライセンス宣言を、印税OSのAccess Layerに変換する",
+      "RSLの外部課金イベントを、印税OSのTrace/Royalty Layerに接続する",
+      "外部許諾・外部課金・内部寄与分配を、一つの監査可能な流れに統合する"
+    ],
+    "non_goals": [
+      "RSL本体仕様の上書き",
+      "法的助言の代替",
+      "価格理論の最終確定"
+    ],
+    "compatibility": {
+      "source_standard": "RSL 1.0",
+      "target_standard": "Kazene Royalty OS v3.0",
+      "preservation_principles": [
+        "origin_traceability",
+        "agency_attribution",
+        "value_recirculation"
+      ]
+    },
+    "source_model": {
+      "rsl": {
+        "namespace": "https://rslstandard.org/rsl",
+        "media_type": "application/rsl+xml",
+        "root_element": "rsl",
+        "primary_elements": [
+          "content",
+          "license",
+          "permits",
+          "prohibits",
+          "payment",
+          "standard",
+          "custom",
+          "amount",
+          "accepts",
+          "legal"
+        ],
+        "discovery_channels": [
+          "robots_txt_license",
+          "http_link_rel_license",
+          "html_link_rel_license",
+          "rss_association",
+          "inline_rsl"
+        ],
+        "canonical_identity": {
+          "content_url_is_canonical_license_id": true,
+          "content_server_plus_url_is_authoritative_when_present": true
+        }
+      }
+    },
+    "target_model": {
+      "royalty_os": {
+        "layers": [
+          "access",
+          "trace",
+          "royalty"
+        ],
+        "internal_unit": {
+          "name": "Q-Coin",
+          "convertible": false,
+          "transferable": false,
+          "external_wallet": false
+        }
+      }
+    },
+    "bridge_objects": [
+      {
+        "name": "access_snapshot",
+        "description": "RSLを正規化した印税OS Access Layer スナップショット"
+      },
+      {
+        "name": "billing_policy",
+        "description": "RSL payment を正規化した外部課金ポリシー"
+      },
+      {
+        "name": "trace_event",
+        "description": "実際のAIアクセス行為"
+      },
+      {
+        "name": "external_charge_event",
+        "description": "RSL/OLP/CDN/決済基盤側で発生した課金イベント"
+      },
+      {
+        "name": "royalty_settlement",
+        "description": "Trace + 外部課金を束ねた分配記録"
+      }
+    ],
+    "pipeline": [
+      {
+        "step": "discover_rsl",
+        "input": [
+          "request_url",
+          "discovery_method",
+          "rsl_document_url"
+        ],
+        "output": [
+          "discovery_record"
+        ],
+        "rules": [
+          "発見方法を必ず保存する",
+          "rsl_document_url を監査対象として保持する"
+        ]
+      },
+      {
+        "step": "parse_rsl",
+        "input": [
+          "rsl_xml"
+        ],
+        "output": [
+          "parsed_rsl_document"
+        ],
+        "rules": [
+          "namespace は https://rslstandard.org/rsl を期待する",
+          "content 要素ごとに独立処理する",
+          "license が複数ある場合は順序を保持する"
+        ]
+      },
+      {
+        "step": "normalize_access",
+        "input": [
+          "parsed_rsl_document"
+        ],
+        "output": [
+          "access_snapshot"
+        ],
+        "rules": [
+          "RSL原文を lossless に保持する",
+          "正規化不能な語彙は extensions.rsl_unmapped に退避する",
+          "prohibits は permits より優先する"
+        ]
+      },
+      {
+        "step": "normalize_billing",
+        "input": [
+          "parsed_rsl_document"
+        ],
+        "output": [
+          "billing_policy"
+        ],
+        "rules": [
+          "payment 未指定時は free とみなす",
+          "content.server がある場合、free や attribution でも license acquisition required を true にする"
+        ]
+      },
+      {
+        "step": "join_runtime_events",
+        "input": [
+          "access_snapshot",
+          "trace_event",
+          "optional_external_charge_event"
+        ],
+        "output": [
+          "royalty_settlement_candidate"
+        ],
+        "rules": [
+          "trace_event.permission_snapshot_id は access_snapshot.snapshot_id と一致させる",
+          "external_charge_event がない場合でも free/attribution 系なら内部Q計算は継続可能",
+          "課金ありライセンスで external_charge_event が無い場合は settlement_status=blocked_or_pending"
+        ]
+      },
+      {
+        "step": "allocate",
+        "input": [
+          "royalty_settlement_candidate"
+        ],
+        "output": [
+          "royalty_settlement"
+        ],
+        "rules": [
+          "外部金額と内部Qを切り分けて保持する",
+          "現金分配とQ配分を混同しない",
+          "監査可能な根拠ID列を必ず保存する"
+        ]
+      }
+    ],
+    "mapping": {
+      "content": {
+        "source": [
+          "content.@url",
+          "content.@server",
+          "content.@encrypted",
+          "content.@lastmod"
+        ],
+        "target": {
+          "asset_id": "canonicalize(content.@url)",
+          "canonical_license_id": "literal(content.@url)",
+          "license_server_url": "content.@server || null",
+          "encrypted": "content.@encrypted || false",
+          "asset_last_modified": "content.@lastmod || null"
+        }
+      },
+      "license": {
+        "source": [
+          "content.license[n]"
+        ],
+        "target": {
+          "policy_id": "asset_id + '#license-' + ordinal",
+          "policy_order": "document order",
+          "raw_rsl_license_xml": "verbatim preserve"
+        }
+      },
+      "permits_and_prohibits": {
+        "precedence": "prohibits_override_permits",
+        "token_sets": {
+          "usage": {
+            "all": {
+              "normalized": {
+                "automated_processing": "allow",
+                "ai_training": "allow",
+                "ai_input": "allow",
+                "ai_index": "allow",
+                "search_indexing": "allow"
+              }
+            },
+            "ai-all": {
+              "normalized": {
+                "ai_training": "allow",
+                "ai_input": "allow",
+                "ai_index": "allow",
+                "ai_generation_output": "allow",
+                "model_evaluation": "allow"
+              }
+            },
+            "ai-train": {
+              "normalized": {
+                "ai_training": "allow"
+              }
+            },
+            "ai-input": {
+              "normalized": {
+                "ai_input": "allow",
+                "grounding": "allow",
+                "retrieval_augmented_use": "allow",
+                "ai_generation_output": "allow"
+              }
+            },
+            "ai-index": {
+              "normalized": {
+                "ai_index": "allow",
+                "retrieval_database_ingest": "allow"
+              }
+            },
+            "search": {
+              "normalized": {
+                "search_indexing": "allow",
+                "link_and_excerpt_search": "allow"
+              }
+            }
+          },
+          "user": {
+            "commercial": {
+              "normalized": {
+                "commercial_use": "allow"
+              }
+            },
+            "non-commercial": {
+              "normalized": {
+                "non_commercial_use": "allow"
+              }
+            },
+            "education": {
+              "normalized": {
+                "education_use": "allow"
+              }
+            },
+            "government": {
+              "normalized": {
+                "government_use": "allow"
+              }
+            },
+            "personal": {
+              "normalized": {
+                "personal_use": "allow"
+              }
+            }
+          }
+        }
+      },
+      "royalty_os_access_projection": {
+        "rules": [
+          "RSL に存在しない権限は unknown を基本とし、勝手に allow にしない",
+          "ただし ai-input=allow の場合、external_response は inferred_allow とできる",
+          "quote / summarize / embed は RSL標準語彙に直接ないため default=unknown",
+          "ai-train=prohibit の場合、retraining_prohibited=true"
+        ],
+        "fields": {
+          "view": "unknown",
+          "summarize": "unknown",
+          "quote": "unknown",
+          "embed": "unknown",
+          "external_response": "allow if ai-input=allow or ai-all=allow; otherwise unknown",
+          "retraining_prohibited": "true if ai-train=prohibit or ai-all=prohibit",
+          "commercial_use": "allow/prohibit/unknown from user vocabulary",
+          "reference_only": "true when ai-input/search/index are prohibited but discovery/view metadata remains allowed; else false"
+        }
+      },
+      "payment": {
+        "default_when_omitted": {
+          "payment_type": "free",
+          "billing_required": false
+        },
+        "mapping": {
+          "purchase": {
+            "external_billing_mode": "one_time",
+            "charge_trigger": "license_acquisition"
+          },
+          "subscription": {
+            "external_billing_mode": "recurring",
+            "charge_trigger": "subscription_period"
+          },
+          "training": {
+            "external_billing_mode": "per_training_use",
+            "charge_trigger": "training_job"
+          },
+          "crawl": {
+            "external_billing_mode": "per_crawl",
+            "charge_trigger": "fetch_or_crawl"
+          },
+          "use": {
+            "external_billing_mode": "per_inference_like_use",
+            "charge_trigger": "ai_generated_output_or_grounding_use"
+          },
+          "contribution": {
+            "external_billing_mode": "good_faith_contribution",
+            "charge_trigger": "agreement_defined"
+          },
+          "attribution": {
+            "external_billing_mode": "non_monetary_credit",
+            "charge_trigger": "visible_credit_required"
+          },
+          "free": {
+            "external_billing_mode": "none",
+            "charge_trigger": "none"
+          }
+        },
+        "child_elements": {
+          "standard_url": "payment.standard || null",
+          "custom_url": "payment.custom || null",
+          "amount_value": "payment.amount.value || null",
+          "amount_currency": "payment.amount.@currency || null",
+          "accepted_payment_protocol": "payment.accepts.@type || null / payment.accepts.text || null"
+        }
+      },
+      "legal": {
+        "preserve_all": true,
+        "target": {
+          "legal_statements": {
+            "warranty": "preserve if present",
+            "other_types": "preserve verbatim"
+          }
+        }
+      }
+    },
+    "access_snapshot_schema": {
+      "required": [
+        "snapshot_id",
+        "asset_id",
+        "policy_id",
+        "source",
+        "canonical",
+        "normalized",
+        "derived_access",
+        "billing",
+        "extensions",
+        "policy_hash",
+        "created_at"
+      ],
+      "shape": {
+        "snapshot_id": "string",
+        "asset_id": "string",
+        "policy_id": "string",
+        "source": {
+          "rsl_document_url": "string",
+          "discovery_method": "string",
+          "rsl_namespace": "string",
+          "content_url": "string",
+          "license_server_url": "string|null"
+        },
+        "canonical": {
+          "permits": {
+            "usage": "string[]",
+            "user": "string[]",
+            "geo": "string[]"
+          },
+          "prohibits": {
+            "usage": "string[]",
+            "user": "string[]",
+            "geo": "string[]"
+          },
+          "payment": {
+            "type": "string",
+            "standard_url": "string|null",
+            "custom_url": "string|null",
+            "amount": {
+              "value": "number|null",
+              "currency": "string|null"
+            },
+            "accepts": {
+              "media_type": "string|null",
+              "payload": "string|null"
+            }
+          }
+        },
+        "normalized": {
+          "ai_training": "allow|prohibit|unknown",
+          "ai_input": "allow|prohibit|unknown",
+          "ai_index": "allow|prohibit|unknown",
+          "search_indexing": "allow|prohibit|unknown",
+          "commercial_use": "allow|prohibit|unknown",
+          "non_commercial_use": "allow|prohibit|unknown",
+          "education_use": "allow|prohibit|unknown",
+          "government_use": "allow|prohibit|unknown",
+          "personal_use": "allow|prohibit|unknown"
+        },
+        "derived_access": {
+          "external_response": "allow|prohibit|unknown|inferred_allow",
+          "retraining_prohibited": "boolean",
+          "quote": "allow|prohibit|unknown",
+          "summarize": "allow|prohibit|unknown",
+          "embed": "allow|prohibit|unknown",
+          "reference_only": "boolean"
+        },
+        "billing": {
+          "external_billing_mode": "string",
+          "charge_trigger": "string",
+          "billing_required": "boolean",
+          "license_acquisition_required": "boolean"
+        },
+        "extensions": {
+          "rsl_unmapped": {}
+        },
+        "policy_hash": "string",
+        "created_at": "RFC3339 timestamp"
+      }
+    },
+    "trace_event_schema": {
+      "required": [
+        "trace_event_id",
+        "occurred_at",
+        "ai_system_id",
+        "principal_id",
+        "asset_id",
+        "permission_snapshot_id",
+        "action",
+        "scope",
+        "contribution_share",
+        "evidence"
+      ],
+      "shape": {
+        "trace_event_id": "string",
+        "occurred_at": "RFC3339 timestamp",
+        "ai_system_id": "string",
+        "principal_id": "string",
+        "operator_entity_id": "string|null",
+        "asset_id": "string",
+        "permission_snapshot_id": "string",
+        "action": {
+          "type": "view|search_index|ai_index|grounding|summarize|quote|external_response|train|other",
+          "raw_source_action": "string|null"
+        },
+        "scope": {
+          "input_tokens": "integer|null",
+          "output_tokens": "integer|null",
+          "bytes_read": "integer|null",
+          "passages_retrieved": "integer|null",
+          "duration_ms": "integer|null"
+        },
+        "contribution_share": "0.0..1.0",
+        "evidence": {
+          "request_id": "string|null",
+          "session_id": "string|null",
+          "retrieval_id": "string|null",
+          "model_run_id": "string|null"
+        }
+      }
+    },
+    "external_charge_event_schema": {
+      "required": [
+        "external_charge_event_id",
+        "asset_id",
+        "billing_mode",
+        "charge_trigger",
+        "gross_amount",
+        "currency",
+        "charged_at"
+      ],
+      "shape": {
+        "external_charge_event_id": "string",
+        "asset_id": "string",
+        "related_trace_event_id": "string|null",
+        "billing_mode": "one_time|recurring|per_training_use|per_crawl|per_inference_like_use|good_faith_contribution|non_monetary_credit|none",
+        "charge_trigger": "string",
+        "gross_amount": "number",
+        "currency": "string",
+        "net_amount_after_fees": "number|null",
+        "fees": {
+          "tax": "number|null",
+          "payment_network": "number|null",
+          "platform": "number|null"
+        },
+        "charged_at": "RFC3339 timestamp",
+        "settlement_reference": "string|null"
+      }
+    },
+    "royalty_settlement_schema": {
+      "required": [
+        "settlement_id",
+        "settlement_group_id",
+        "asset_id",
+        "settlement_status",
+        "q_usage",
+        "monetary_allocation",
+        "provenance"
+      ],
+      "shape": {
+        "settlement_id": "string",
+        "settlement_group_id": "string",
+        "asset_id": "string",
+        "settlement_status": "ready|pending|blocked_or_pending|free_mode",
+        "q_usage": {
+          "base_unit": "number",
+          "action_coef": "number",
+          "work_coef": "number",
+          "scope_coef": "number",
+          "contribution_share": "number",
+          "q_amount": "number"
+        },
+        "monetary_allocation": {
+          "source_mode": "rsl_external_fee|platform_pool|none",
+          "allocable_amount": "number",
+          "currency": "string|null",
+          "formula": "string",
+          "allocated_amount": "number"
+        },
+        "provenance": {
+          "access_snapshot_id": "string",
+          "trace_event_id": "string",
+          "external_charge_event_id": "string|null",
+          "policy_hash": "string",
+          "rsl_document_url": "string",
+          "license_server_url": "string|null"
+        }
+      }
+    },
+    "calculation_rules": {
+      "q_formula": {
+        "expression": "q_amount = base_unit * action_coef * work_coef * scope_coef * contribution_share",
+        "defaults": {
+          "base_unit": 1.0,
+          "action_coef": {
+            "view": 1.0,
+            "summarize": 1.5,
+            "quote": 1.2,
+            "external_response": 2.0,
+            "grounding": 1.8,
+            "ai_index": 1.3,
+            "search_index": 1.0,
+            "train": 3.0,
+            "other": 1.0
+          },
+          "work_coef": 1.0,
+          "scope_coef": 1.0
+        }
+      },
+      "monetary_formula": {
+        "when_external_fee_exists": {
+          "expression": "allocated_amount = allocable_amount * (asset_q_amount / settlement_group_total_q_amount)"
+        },
+        "when_external_fee_absent": {
+          "expression": "allocated_amount = 0; q_amount is still recorded"
+        },
+        "allocable_amount_rule": "net_amount_after_fees if present else gross_amount"
+      }
+    },
+    "join_rules": [
+      {
+        "name": "server_presence_rule",
+        "rule": "license_server_url != null => billing.license_acquisition_required = true"
+      },
+      {
+        "name": "free_with_server_rule",
+        "rule": "payment.type=free and license_server_url != null => acquisition required, but gross_amount may be 0"
+      },
+      {
+        "name": "attribution_rule",
+        "rule": "payment.type=attribution => external monetary allocation may be 0; attribution obligation is preserved in canonical.payment"
+      },
+      {
+        "name": "unknown_extension_rule",
+        "rule": "unrecognized tokens/elements from non-RSL namespaces are preserved under extensions and must not break transformation"
+      },
+      {
+        "name": "multiple_license_rule",
+        "rule": "multiple <license> entries become multiple policy objects; runtime must select one by policy_id or negotiation outcome"
+      }
+    ],
+    "error_policy": {
+      "parser_errors": [
+        {
+          "code": "invalid_rsl_namespace"
+        },
+        {
+          "code": "missing_content_url"
+        },
+        {
+          "code": "missing_license"
+        },
+        {
+          "code": "malformed_amount"
+        }
+      ],
+      "transformation_errors": [
+        {
+          "code": "conflicting_policy_resolution_failed"
+        },
+        {
+          "code": "missing_snapshot_for_trace"
+        },
+        {
+          "code": "billing_required_but_no_charge_event"
+        }
+      ],
+      "handling": {
+        "invalid_source": "reject",
+        "unknown_extension": "preserve_and_continue",
+        "unmapped_standard_token": "preserve_as_unmapped_and_continue"
+      }
+    },
+    "audit_requirements": {
+      "must_log": [
+        "rsl_document_url",
+        "discovery_method",
+        "canonical_license_id",
+        "policy_hash",
+        "permission_snapshot_id",
+        "trace_event_id",
+        "external_charge_event_id",
+        "settlement_id"
+      ],
+      "retention": {
+        "access_snapshot": "recommended >= 1 year",
+        "trace_event": "recommended >= 1 year",
+        "settlement": "recommended >= 7 years or jurisdictional requirement"
+      }
+    },
+    "example": {
+      "input_rsl_xml": "<rsl xmlns=\"https://rslstandard.org/rsl\"><content url=\"/\" server=\"https://license.example.com\"><license><permits type=\"usage\">ai-input ai-index</permits><prohibits type=\"usage\">ai-train</prohibits><permits type=\"user\">commercial</permits><payment type=\"use\"><amount currency=\"USD\">0.020</amount><standard>https://example.com/licenses/pay-per-use</standard></payment></license></content></rsl>",
+      "output_access_snapshot_yaml": "snapshot_id: \"snap_01HZX...\"\nasset_id: \"/\"\npolicy_id: \"/#license-1\"\nsource:\n  rsl_document_url: \"https://example.com/rsl.xml\"\n  discovery_method: \"robots_txt_license\"\n  rsl_namespace: \"https://rslstandard.org/rsl\"\n  content_url: \"/\"\n  license_server_url: \"https://license.example.com\"\ncanonical:\n  permits:\n    usage: [\"ai-input\", \"ai-index\"]\n    user: [\"commercial\"]\n    geo: []\n  prohibits:\n    usage: [\"ai-train\"]\n    user: []\n    geo: []\n  payment:\n    type: \"use\"\n    standard_url: \"https://example.com/licenses/pay-per-use\"\n    custom_url: null\n    amount:\n      value: 0.020\n      currency: \"USD\"\n    accepts:\n      media_type: null\n      payload: null\nnormalized:\n  ai_training: \"prohibit\"\n  ai_input: \"allow\"\n  ai_index: \"allow\"\n  search_indexing: \"unknown\"\n  commercial_use: \"allow\"\n  non_commercial_use: \"unknown\"\n  education_use: \"unknown\"\n  government_use: \"unknown\"\n  personal_use: \"unknown\"\nderived_access:\n  external_response: \"inferred_allow\"\n  retraining_prohibited: true\n  quote: \"unknown\"\n  summarize: \"unknown\"\n  embed: \"unknown\"\n  reference_only: false\nbilling:\n  external_billing_mode: \"per_inference_like_use\"\n  charge_trigger: \"ai_generated_output_or_grounding_use\"\n  billing_required: true\n  license_acquisition_required: true\nextensions:\n  rsl_unmapped: {}\npolicy_hash: \"sha256:abc123\"\ncreated_at: \"2026-04-19T10:00:00Z\"",
+      "output_trace_event_yaml": "trace_event_id: \"trace_01HZX...\"\noccurred_at: \"2026-04-19T10:05:00Z\"\nai_system_id: \"assistant-prod-jp-01\"\nprincipal_id: \"tenant_abc\"\noperator_entity_id: \"platform_xyz\"\nasset_id: \"/\"\npermission_snapshot_id: \"snap_01HZX...\"\naction:\n  type: \"grounding\"\n  raw_source_action: \"retrieval_for_answer\"\nscope:\n  input_tokens: 620\n  output_tokens: 188\n  bytes_read: 14820\n  passages_retrieved: 3\n  duration_ms: 240\ncontribution_share: 0.42\nevidence:\n  request_id: \"req_01\"\n  session_id: \"sess_01\"\n  retrieval_id: \"ret_01\"\n  model_run_id: \"run_01\"",
+      "output_external_charge_event_yaml": "external_charge_event_id: \"charge_01HZX...\"\nasset_id: \"/\"\nrelated_trace_event_id: \"trace_01HZX...\"\nbilling_mode: \"per_inference_like_use\"\ncharge_trigger: \"ai_generated_output_or_grounding_use\"\ngross_amount: 0.020\ncurrency: \"USD\"\nnet_amount_after_fees: 0.016\nfees:\n  tax: 0.0\n  payment_network: 0.002\n  platform: 0.002\ncharged_at: \"2026-04-19T10:05:01Z\"\nsettlement_reference: \"licsrv_tx_001\"",
+      "output_royalty_settlement_yaml": "settlement_id: \"settle_01HZX...\"\nsettlement_group_id: \"group_2026-04-19_req_01\"\nasset_id: \"/\"\nsettlement_status: \"ready\"\nq_usage:\n  base_unit: 1.0\n  action_coef: 1.8\n  work_coef: 1.0\n  scope_coef: 1.0\n  contribution_share: 0.42\n  q_amount: 0.756\nmonetary_allocation:\n  source_mode: \"rsl_external_fee\"\n  allocable_amount: 0.016\n  currency: \"USD\"\n  formula: \"allocable_amount * (asset_q_amount / settlement_group_total_q_amount)\"\n  allocated_amount: 0.0064\nprovenance:\n  access_snapshot_id: \"snap_01HZX...\"\n  trace_event_id: \"trace_01HZX...\"\n  external_charge_event_id: \"charge_01HZX...\"\n  policy_hash: \"sha256:abc123\"\n  rsl_document_url: \"https://example.com/rsl.xml\"\n  license_server_url: \"https://license.example.com\""
+    }
+  }
+}
