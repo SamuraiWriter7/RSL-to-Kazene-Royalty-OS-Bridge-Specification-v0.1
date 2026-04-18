@@ -1,0 +1,50 @@
+cff-version: 1.2.0
+message: "If you use this bridge specification, please cite it using the metadata below."
+title: "RSL to Kazene Royalty OS Bridge Specification v0.1"
+type: software
+
+authors:
+  - family-names: "Alpha"
+    given-names: "Shidenkai"
+    alias: "Shidenkai Alpha"
+
+abstract: >-
+  A machine-readable bridge specification connecting RSL 1.0 external licensing
+  with Kazene Royalty OS v3.0 access, trace, and royalty layers. This repository
+  provides JSON Schemas, sample JSON files, and validation workflows for
+  auditable AI rights processing and royalty allocation.
+
+keywords:
+  - RSL
+  - RSL Standard
+  - Kazene
+  - Royalty OS
+  - AI licensing
+  - AI rights
+  - traceability
+  - auditability
+  - JSON Schema
+  - schema validation
+  - GitHub Actions
+  - AI governance
+
+license: "SEE LICENSE IN LICENSE"
+version: "0.1.0"
+date-released: "2026-04-19"
+
+repository-code: "https://github.com/SamuraiWriter7/RSL-to-Kazene-Royalty-OS-Bridge-Specification-v0.1
+"
+url: "https://github.com/SamuraiWriter7/RSL-to-Kazene-Royalty-OS-Bridge-Specification-v0.1
+"
+
+preferred-citation:
+  type: software
+  authors:
+    - family-names: "Alpha"
+      given-names: "Shidenkai"
+      alias: "Shidenkai Alpha"
+  title: "RSL to Kazene Royalty OS Bridge Specification v0.1"
+  version: "0.1.0"
+  date-released: "2026-04-19"
+  repository-code: "https://github.com/SamuraiWriter7/rsl-kazene-bridge-spec"
+  url: "https://github.com/SamuraiWriter7/rsl-kazene-bridge-spec"
