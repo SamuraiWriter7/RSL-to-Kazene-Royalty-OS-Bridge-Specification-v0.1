@@ -1,0 +1,110 @@
+name: Validate Specs
+
+on:
+  push:
+    paths:
+      - ".github/workflows/validate-specs.yml"
+      - "schema/rsl-royalty-bridge-v0.1.schema.json"
+      - "schema/access_snapshot.schema.json"
+      - "schema/trace_event.schema.json"
+      - "schema/royalty_settlement.schema.json"
+      - "schema/external_charge_event.schema.json"
+      - "examples/rsl-royalty-bridge-v0.1.sample.json"
+      - "examples/access_snapshot.sample.json"
+      - "examples/trace_event.sample.json"
+      - "examples/royalty_settlement.sample.json"
+      - "examples/external_charge_event.sample.json"
+  pull_request:
+    paths:
+      - ".github/workflows/validate-specs.yml"
+      - "schema/rsl-royalty-bridge-v0.1.schema.json"
+      - "schema/access_snapshot.schema.json"
+      - "schema/trace_event.schema.json"
+      - "schema/royalty_settlement.schema.json"
+      - "schema/external_charge_event.schema.json"
+      - "examples/rsl-royalty-bridge-v0.1.sample.json"
+      - "examples/access_snapshot.sample.json"
+      - "examples/trace_event.sample.json"
+      - "examples/royalty_settlement.sample.json"
+      - "examples/external_charge_event.sample.json"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jsonschema
+
+      - name: Debug file tree
+        run: |
+          pwd
+          find . -maxdepth 3 -type f | sort
+
+      - name: Validate JSON schemas and samples
+        run: |
+          python <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator, FormatChecker
+
+          pairs = [
+              (
+                  "schema/rsl-royalty-bridge-v0.1.schema.json",
+                  "examples/rsl-royalty-bridge-v0.1.sample.json",
+              ),
+              (
+                  "schema/access_snapshot.schema.json",
+                  "examples/access_snapshot.sample.json",
+              ),
+              (
+                  "schema/trace_event.schema.json",
+                  "examples/trace_event.sample.json",
+              ),
+              (
+                  "schema/royalty_settlement.schema.json",
+                  "examples/royalty_settlement.sample.json",
+              ),
+              (
+                  "schema/external_charge_event.schema.json",
+                  "examples/external_charge_event.sample.json",
+              ),
+          ]
+
+          def load_json(path_str):
+              path = Path(path_str)
+              if not path.exists():
+                  raise FileNotFoundError(f"Missing file: {path}")
+              with path.open("r", encoding="utf-8") as f:
+                  return json.load(f)
+
+          for schema_path, sample_path in pairs:
+              print(f"\n=== Validating {sample_path} against {schema_path} ===")
+              schema = load_json(schema_path)
+              sample = load_json(sample_path)
+
+              validator = Draft202012Validator(schema, format_checker=FormatChecker())
+              errors = sorted(validator.iter_errors(sample), key=lambda e: list(e.path))
+
+              if errors:
+                  print(f"Validation failed for {sample_path}")
+                  for err in errors:
+                      location = ".".join(str(x) for x in err.path) or "<root>"
+                      print(f"  - {location}: {err.message}")
+                  raise SystemExit(1)
+
+              print(f"OK: {sample_path}")
+
+          print("\nAll schema validations passed.")
+          PY
