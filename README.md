@@ -358,3 +358,23 @@ Kazene Royalty OS の内部循環世界 を
 
 橋は目立たない。
 だが、橋がなければ向こう岸へは渡れない。
+
+## Citation
+
+If you use this bridge specification in research, implementation, documentation, or policy discussion, please cite this repository using the metadata provided in `CITATION.cff`.
+
+### Preferred citation
+
+```text
+Shidenkai Alpha. RSL to Kazene Royalty OS Bridge Specification v0.1. Version 0.1.0. 2026.
+
+GitHub and other tools that support Citation File Format can automatically generate citation text from CITATION.cff.
+
+License notice
+
+License information for this repository is defined in the LICENSE file.
+The CITATION.cff entry uses:
+
+license: "SEE LICENSE IN LICENSE"
+
+This means the authoritative license terms are the ones written in LICENSE, not a shortened label inside the citation metadata.
