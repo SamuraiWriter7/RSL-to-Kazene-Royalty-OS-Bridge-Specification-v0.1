@@ -1,0 +1,377 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schema/access_snapshot.schema.json",
+  "title": "Access Snapshot Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot_id",
+    "asset_id",
+    "policy_id",
+    "source",
+    "canonical",
+    "normalized",
+    "derived_access",
+    "billing",
+    "extensions",
+    "policy_hash",
+    "created_at"
+  ],
+  "$defs": {
+    "nullableString": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "triState": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "prohibit",
+        "unknown"
+      ]
+    },
+    "triStateWithInferred": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "prohibit",
+        "unknown",
+        "inferred_allow"
+      ]
+    },
+    "stringArray": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "amountBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "currency"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "currency": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "acceptsBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "media_type",
+        "payload"
+      ],
+      "properties": {
+        "media_type": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "payload": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    }
+  },
+  "properties": {
+    "snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policy_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rsl_document_url",
+        "discovery_method",
+        "rsl_namespace",
+        "content_url",
+        "license_server_url"
+      ],
+      "properties": {
+        "rsl_document_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "discovery_method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rsl_namespace": {
+          "type": "string",
+          "format": "uri"
+        },
+        "content_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "license_server_url": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "format": "uri"
+            }
+          ]
+        }
+      }
+    },
+    "canonical": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "permits",
+        "prohibits",
+        "payment"
+      ],
+      "properties": {
+        "permits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "usage",
+            "user",
+            "geo"
+          ],
+          "properties": {
+            "usage": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "user": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "geo": {
+              "$ref": "#/$defs/stringArray"
+            }
+          }
+        },
+        "prohibits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "usage",
+            "user",
+            "geo"
+          ],
+          "properties": {
+            "usage": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "user": {
+              "$ref": "#/$defs/stringArray"
+            },
+            "geo": {
+              "$ref": "#/$defs/stringArray"
+            }
+          }
+        },
+        "payment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "standard_url",
+            "custom_url",
+            "amount",
+            "accepts"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "purchase",
+                "subscription",
+                "training",
+                "crawl",
+                "use",
+                "contribution",
+                "attribution",
+                "free"
+              ]
+            },
+            "standard_url": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string",
+                  "format": "uri"
+                }
+              ]
+            },
+            "custom_url": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string",
+                  "format": "uri"
+                }
+              ]
+            },
+            "amount": {
+              "$ref": "#/$defs/amountBlock"
+            },
+            "accepts": {
+              "$ref": "#/$defs/acceptsBlock"
+            }
+          }
+        }
+      }
+    },
+    "normalized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ai_training",
+        "ai_input",
+        "ai_index",
+        "search_indexing",
+        "commercial_use",
+        "non_commercial_use",
+        "education_use",
+        "government_use",
+        "personal_use"
+      ],
+      "properties": {
+        "ai_training": {
+          "$ref": "#/$defs/triState"
+        },
+        "ai_input": {
+          "$ref": "#/$defs/triState"
+        },
+        "ai_index": {
+          "$ref": "#/$defs/triState"
+        },
+        "search_indexing": {
+          "$ref": "#/$defs/triState"
+        },
+        "commercial_use": {
+          "$ref": "#/$defs/triState"
+        },
+        "non_commercial_use": {
+          "$ref": "#/$defs/triState"
+        },
+        "education_use": {
+          "$ref": "#/$defs/triState"
+        },
+        "government_use": {
+          "$ref": "#/$defs/triState"
+        },
+        "personal_use": {
+          "$ref": "#/$defs/triState"
+        }
+      }
+    },
+    "derived_access": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "external_response",
+        "retraining_prohibited",
+        "quote",
+        "summarize",
+        "embed",
+        "reference_only"
+      ],
+      "properties": {
+        "external_response": {
+          "$ref": "#/$defs/triStateWithInferred"
+        },
+        "retraining_prohibited": {
+          "type": "boolean"
+        },
+        "quote": {
+          "$ref": "#/$defs/triState"
+        },
+        "summarize": {
+          "$ref": "#/$defs/triState"
+        },
+        "embed": {
+          "$ref": "#/$defs/triState"
+        },
+        "reference_only": {
+          "type": "boolean"
+        }
+      }
+    },
+    "billing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "external_billing_mode",
+        "charge_trigger",
+        "billing_required",
+        "license_acquisition_required"
+      ],
+      "properties": {
+        "external_billing_mode": {
+          "type": "string",
+          "enum": [
+            "one_time",
+            "recurring",
+            "per_training_use",
+            "per_crawl",
+            "per_inference_like_use",
+            "good_faith_contribution",
+            "non_monetary_credit",
+            "none"
+          ]
+        },
+        "charge_trigger": {
+          "type": "string",
+          "minLength": 1
+        },
+        "billing_required": {
+          "type": "boolean"
+        },
+        "license_acquisition_required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "rsl_unmapped"
+      ],
+      "properties": {
+        "rsl_unmapped": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "policy_hash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
