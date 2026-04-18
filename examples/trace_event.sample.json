@@ -1,0 +1,27 @@
+{
+  "trace_event_id": "trace_01HZXB8L9M0N1P2Q3R4S5T6U",
+  "occurred_at": "2026-04-19T10:05:00Z",
+  "ai_system_id": "assistant-prod-jp-01",
+  "principal_id": "tenant_abc",
+  "operator_entity_id": "platform_xyz",
+  "asset_id": "/articles/dragon-philosophy",
+  "permission_snapshot_id": "snap_01HZXA7K8M9N0P1Q2R3S4T5U",
+  "action": {
+    "type": "grounding",
+    "raw_source_action": "retrieval_for_answer"
+  },
+  "scope": {
+    "input_tokens": 620,
+    "output_tokens": 188,
+    "bytes_read": 14820,
+    "passages_retrieved": 3,
+    "duration_ms": 240
+  },
+  "contribution_share": 0.42,
+  "evidence": {
+    "request_id": "req_01",
+    "session_id": "sess_01",
+    "retrieval_id": "ret_01",
+    "model_run_id": "run_01"
+  }
+}
