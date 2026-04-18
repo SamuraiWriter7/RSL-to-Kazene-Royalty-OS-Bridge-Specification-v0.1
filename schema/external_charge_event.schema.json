@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schema/external_charge_event.schema.json",
+  "title": "External Charge Event Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "external_charge_event_id",
+    "asset_id",
+    "billing_mode",
+    "charge_trigger",
+    "gross_amount",
+    "currency",
+    "charged_at"
+  ],
+  "properties": {
+    "external_charge_event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "related_trace_event_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "billing_mode": {
+      "type": "string",
+      "enum": [
+        "one_time",
+        "recurring",
+        "per_training_use",
+        "per_crawl",
+        "per_inference_like_use",
+        "good_faith_contribution",
+        "non_monetary_credit",
+        "none"
+      ]
+    },
+    "charge_trigger": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gross_amount": {
+      "type": "number",
+      "minimum": 0
+    },
+    "currency": {
+      "type": "string",
+      "minLength": 1
+    },
+    "net_amount_after_fees": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "fees": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tax",
+        "payment_network",
+        "platform"
+      ],
+      "properties": {
+        "tax": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "payment_network": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "platform": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "charged_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "settlement_reference": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}
