@@ -1,0 +1,17 @@
+{
+  "external_charge_event_id": "charge_01HZXD0N1P2Q3R4S5T6U7V8W",
+  "asset_id": "/articles/dragon-philosophy",
+  "related_trace_event_id": "trace_01HZXB8L9M0N1P2Q3R4S5T6U",
+  "billing_mode": "per_inference_like_use",
+  "charge_trigger": "ai_generated_output_or_grounding_use",
+  "gross_amount": 0.02,
+  "currency": "USD",
+  "net_amount_after_fees": 0.016,
+  "fees": {
+    "tax": 0.0,
+    "payment_network": 0.002,
+    "platform": 0.002
+  },
+  "charged_at": "2026-04-19T10:05:01Z",
+  "settlement_reference": "licsrv_tx_001"
+}
